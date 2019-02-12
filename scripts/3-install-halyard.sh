@@ -7,12 +7,10 @@ sudo bash InstallHalyard.sh --user ubuntu
 curl -fsSL get.docker.com -o get-docker.sh
 sh get-docker.sh
 sudo usermod -aG docker ubuntu
-sudo docker run -p 127.0.0.1:9090:9000 -d --name minio1 -v /mnt/data:/data -v /mnt/config:/root/.minio minio/minio server /data
+sudo docker run -it -p 127.0.0.1:9090:9000 -d --name minio1 -v /mnt/data:/data -v /mnt/config:/root/.minio minio/minio server /data
 
-sudo apt-get -y install jq apt-transport-https
-
-MINIO_SECRET_KEY=`echo $(sudo docker exec minio1 cat /data/.minio.sys/config/config.json) |jq -r '.credential.secretKey'`
-MINIO_ACCESS_KEY=`echo $(sudo docker exec minio1 cat /data/.minio.sys/config/config.json) |jq -r '.credential.accessKey'`
+MINIO_ACCESS_KEY=$(docker logs minio1 | grep AccessKey | awk '{print $2}')
+MINIO_SECRET_KEY=$(docker logs minio1 | grep SecretKey | awk '{print $2}')
 
 echo $MINIO_SECRET_KEY | hal config storage s3 edit --endpoint http://127.0.0.1:9090 \
     --access-key-id $MINIO_ACCESS_KEY \
